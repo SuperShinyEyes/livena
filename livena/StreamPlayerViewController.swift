@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVKit
 import AVFoundation
 
 struct Constants {
@@ -16,41 +17,40 @@ struct Constants {
     }
 }
 
-class VideoPlayerViewController: UIViewController {
-    let avPlayer = AVPlayer()
-    var avPlayerLayer: AVPlayerLayer!
+class StreamPlayerViewController: UIViewController {
+    
+    var avPlayerVC = AVPlayerViewController()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         
-        // An AVPlayerLayer is a CALayer instance to which the AVPlayer can
-        // direct its visual output. Without it, the user will see nothing.
-        avPlayerLayer = AVPlayerLayer(player: avPlayer)
-        view.layer.insertSublayer(avPlayerLayer, at: 0)
-        print("Insert subplayer")
-        
-        let url = URL(string: Constants.StreamURLs.sample2)
-        let playerItem = AVPlayerItem(url: url!)
-        print("status: \(playerItem.status.rawValue)")
-        avPlayer.replaceCurrentItem(with: playerItem)
+        loadStream(urlAsString: Constants.StreamURLs.sample2, avPlayerVC: avPlayerVC)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        avPlayer.play() // Start the playback
-        print("Play \tStatus: \(avPlayer.currentItem?.status.rawValue)")
-    }
-    
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        
-        // Layout subviews manually
-        avPlayerLayer.frame = view.bounds
+
+        if let player = avPlayerVC.player {
+            player.play()
+            print("ready: \(avPlayerVC.isReadyForDisplay)")
+        } else {
+            print("no player")
+        }
     }
     
     // Force the view into landscape mode (which is how most video media is consumed.)
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         return UIInterfaceOrientationMask.landscape
+    }
+}
+
+extension StreamPlayerViewController {
+    fileprivate func loadStream(urlAsString: String, avPlayerVC: AVPlayerViewController) {
+        guard let url = URL(string: urlAsString) else { print("Invalid URL: \(urlAsString)");return }
+        
+        avPlayerVC.player = AVPlayer(url: url)
+        avPlayerVC.view.frame = view.bounds
+        view.addSubview(avPlayerVC.view)
     }
 }
